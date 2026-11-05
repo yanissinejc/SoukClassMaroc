@@ -56,8 +56,9 @@ export const AdminWalletModal: React.FC<AdminWalletModalProps> = ({
 
   // Withdrawal form state
   const [wdrAmount, setWdrAmount] = useState<number | ''>('');
-  const [wdrType, setWdrType] = useState<'FASTPAY_CARD' | 'BANK_RIB' | 'DABAPAY_WALLET'>('FASTPAY_CARD');
-  const [wdrTargetNumber, setWdrTargetNumber] = useState('5355 4800 2314 9820');
+  const [wdrType, setWdrType] = useState<'PRESTATAIRE_DIRECT' | 'BANK_RIB'>('PRESTATAIRE_DIRECT');
+  const [providerFirstName, setProviderFirstName] = useState('Yassine');
+  const [wdrTargetNumber, setWdrTargetNumber] = useState('007 780 0001234567890123 45');
   const [wdrFeedback, setWdrFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Renewal state
@@ -131,12 +132,13 @@ export const AdminWalletModal: React.FC<AdminWalletModalProps> = ({
     }
 
     setWdrFeedback(null);
-    const res = await walletService.requestWithdrawal(amt, wdrType, wdrTargetNumber);
+    const firstName = providerFirstName.trim() || 'Yassine';
+    const res = await walletService.requestWithdrawal(amt, wdrType, wdrTargetNumber, firstName);
 
     if (res.success) {
       setWdrFeedback({
         type: 'success',
-        message: `Demande de retrait de ${formatPriceDH(amt)} enregistrée côté serveur avec succès.`
+        message: `Demande de retrait de ${formatPriceDH(amt)} enregistrée pour le prestataire ${firstName}.`
       });
       setWdrAmount('');
       refreshWalletData();
@@ -663,22 +665,22 @@ export const AdminWalletModal: React.FC<AdminWalletModalProps> = ({
 
                     <form onSubmit={handleSubmitWithdrawal} className="space-y-4">
                       {/* Destination Type */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           type="button"
                           onClick={() => {
-                            setWdrType('FASTPAY_CARD');
-                            setWdrTargetNumber('5355 4800 2314 9820');
+                            setWdrType('PRESTATAIRE_DIRECT');
+                            setWdrTargetNumber('007 780 0001234567890123 45');
                           }}
-                          className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                            wdrType === 'FASTPAY_CARD'
+                          className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
+                            wdrType === 'PRESTATAIRE_DIRECT'
                               ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/30'
                               : 'border-slate-200 bg-white'
                           }`}
                         >
                           <CreditCard className="w-4 h-4 text-blue-700 mb-1" />
-                          <span className="font-extrabold text-xs block text-slate-900">Carte BMCE FastPay</span>
-                          <span className="text-[10px] text-slate-500">16 chiffres carte jeune</span>
+                          <span className="font-extrabold text-xs block text-slate-900">Virement direct au prestataire</span>
+                          <span className="text-[10px] text-slate-500">Transféré automatiquement sous son prénom ({providerFirstName || 'Yassine'})</span>
                         </button>
 
                         <button
@@ -687,39 +689,40 @@ export const AdminWalletModal: React.FC<AdminWalletModalProps> = ({
                             setWdrType('BANK_RIB');
                             setWdrTargetNumber('007 780 0001234567890123 45');
                           }}
-                          className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                          className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
                             wdrType === 'BANK_RIB'
                               ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/30'
                               : 'border-slate-200 bg-white'
                           }`}
                         >
                           <Landmark className="w-4 h-4 text-emerald-700 mb-1" />
-                          <span className="font-extrabold text-xs block text-slate-900">Virement Bancaire</span>
-                          <span className="text-[10px] text-slate-500">RIB 24 chiffres</span>
+                          <span className="font-extrabold text-xs block text-slate-900">Virement Bancaire National</span>
+                          <span className="text-[10px] text-slate-500">RIB 24 chiffres officiel au Maroc</span>
                         </button>
+                      </div>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setWdrType('DABAPAY_WALLET');
-                            setWdrTargetNumber('+212 661 23 45 67');
-                          }}
-                          className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                            wdrType === 'DABAPAY_WALLET'
-                              ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/30'
-                              : 'border-slate-200 bg-white'
-                          }`}
-                        >
-                          <Wallet className="w-4 h-4 text-purple-700 mb-1" />
-                          <span className="font-extrabold text-xs block text-slate-900">M-Wallet DabaPay</span>
-                          <span className="text-[10px] text-slate-500">Numéro de téléphone</span>
-                        </button>
+                      {/* Provider First Name Input */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                          Prénom du prestataire de paiement (automatique)
+                        </label>
+                        <input
+                          type="text"
+                          value={providerFirstName}
+                          onChange={(e) => setProviderFirstName(e.target.value)}
+                          placeholder="Ex: Yassine"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-600"
+                          required
+                        />
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          Le virement sera automatiquement émis et enregistré sous ce prénom par le prestataire.
+                        </p>
                       </div>
 
                       {/* Destination Number */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                          Coordonnées de destination
+                          Numéro de compte / RIB du prestataire
                         </label>
                         <input
                           type="text"

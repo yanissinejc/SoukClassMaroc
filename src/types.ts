@@ -141,12 +141,14 @@ export interface FinancialTransaction {
 }
 
 export type WithdrawalStatus = 'EN_ATTENTE' | 'VALIDE' | 'TRANSFERE' | 'REJETE';
+export type WithdrawalDestinationType = 'PRESTATAIRE_DIRECT' | 'BANK_RIB';
 
 export interface WithdrawalRequest {
   id: string;
   amount: number; // in Dirhams (DH)
-  destinationType: 'FASTPAY_CARD' | 'BANK_RIB' | 'DABAPAY_WALLET';
-  destinationLabel: string; // Masked card or account label (e.g. "Carte BMCE FastPay (5355 •••• •••• 9820)")
+  destinationType: WithdrawalDestinationType;
+  providerFirstName?: string; // Prénom du prestataire de paiement (ex: Yassine)
+  destinationLabel: string; // Ex: "Virement direct prestataire : Yassine (Compte •••• 9820)"
   requestedAt: string;
   processedAt?: string;
   status: WithdrawalStatus;

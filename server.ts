@@ -176,13 +176,14 @@ const defaultData: DatabaseSchema = {
     {
       id: 'WDR-001',
       amount: 2500,
-      destinationType: 'FASTPAY_CARD',
-      destinationLabel: 'Carte BMCE FastPay (5355 •••• •••• 9820)',
+      destinationType: 'PRESTATAIRE_DIRECT',
+      providerFirstName: 'Yassine',
+      destinationLabel: 'Virement direct prestataire : Yassine (Compte BOA •••• 9820)',
       requestedAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
       processedAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
       status: 'TRANSFERE',
-      reference: 'BOA-FASTPAY-TRF-9921',
-      adminNotes: 'Recharge directe carte jeune 16 chiffres validée'
+      reference: 'BOA-PREST-TRF-9921',
+      adminNotes: 'Virement automatique validé et transféré au prénom du prestataire'
     }
   ],
   premiumListings: {}
@@ -358,7 +359,7 @@ app.get('/api/wallet/withdrawals', (req, res) => {
 
 // 5. Create Withdrawal Request
 app.post('/api/wallet/withdrawals', (req, res) => {
-  const { amount, destinationType, destinationNumber } = req.body;
+  const { amount, destinationType, destinationNumber, providerFirstName } = req.body;
   const numAmount = Number(amount);
 
   if (!numAmount || numAmount <= 0) {
@@ -373,29 +374,28 @@ app.post('/api/wallet/withdrawals', (req, res) => {
     });
   }
 
-  // Mask destination details for security - NEVER store full sensitive data
+  // Automatically use the provider's first name
+  const firstName = (providerFirstName && String(providerFirstName).trim()) || 'Yassine';
+  const cleaned = String(destinationNumber || '').replace(/\D/g, '');
+  const last4 = cleaned.slice(-4) || '9820';
+
   let maskedLabel = '';
-  if (destinationType === 'FASTPAY_CARD') {
-    const cleaned = String(destinationNumber || '').replace(/\D/g, '');
-    const last4 = cleaned.slice(-4) || '9820';
-    maskedLabel = `Carte BMCE FastPay (•••• •••• •••• ${last4})`;
-  } else if (destinationType === 'BANK_RIB') {
-    const cleaned = String(destinationNumber || '').replace(/\D/g, '');
-    const last4 = cleaned.slice(-4) || '0123';
-    maskedLabel = `Compte bancaire RIB (•••• •••• •••• •••• •••• ${last4})`;
+  if (destinationType === 'PRESTATAIRE_DIRECT') {
+    maskedLabel = `Virement direct prestataire : ${firstName} (Compte bancaire •••• ${last4})`;
   } else {
-    maskedLabel = `M-Wallet DabaPay (${String(destinationNumber || '+212 661 ••••')})`;
+    maskedLabel = `Virement RIB national : ${firstName} (•••• •••• •••• •••• ${last4})`;
   }
 
   const newWithdrawal: WithdrawalRequest = {
     id: `WDR-${Date.now()}`,
     amount: numAmount,
-    destinationType: destinationType || 'FASTPAY_CARD',
+    destinationType: destinationType || 'PRESTATAIRE_DIRECT',
+    providerFirstName: firstName,
     destinationLabel: maskedLabel,
     requestedAt: new Date().toISOString(),
     status: 'EN_ATTENTE',
     reference: `REF-TRF-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
-    adminNotes: 'Demande de retrait enregistrée côté serveur'
+    adminNotes: `Virement au nom du prestataire (${firstName}) enregistré`
   };
 
   db.withdrawals.unshift(newWithdrawal);

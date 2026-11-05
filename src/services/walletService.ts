@@ -75,14 +75,15 @@ export const walletService = {
   // 5. Create Withdrawal Request
   async requestWithdrawal(
     amount: number,
-    destinationType: 'FASTPAY_CARD' | 'BANK_RIB' | 'DABAPAY_WALLET',
-    destinationNumber: string
+    destinationType: 'PRESTATAIRE_DIRECT' | 'BANK_RIB',
+    destinationNumber: string,
+    providerFirstName?: string
   ): Promise<{ success: boolean; error?: string; withdrawal?: WithdrawalRequest; stats?: WalletStats }> {
     try {
       const res = await fetch('/api/wallet/withdrawals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, destinationType, destinationNumber })
+        body: JSON.stringify({ amount, destinationType, destinationNumber, providerFirstName })
       });
       return await res.json();
     } catch (err) {
