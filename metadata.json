@@ -1,0 +1,6 @@
+{
+  "name": "SoukClass Maroc - Petites Annonces Premium",
+  "description": "La marketplace haut de gamme n°1 au Maroc : Immobilier, Objets du quotidien, Terroir & Nourriture, et Services d'exception en Dirhams (DH).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
